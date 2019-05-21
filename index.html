@@ -1,0 +1,468 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>Working With Large Datasets :: Northwestern IT Research Computing Services</title>
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/northwestern.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+
+				<section data-markdown>
+					<textarea data-template>
+					  # Working With Large Datasets
+		  
+					  Northwestern IT Researchers' Toolkit Series
+					</textarea>
+				  </section>
+		  
+				  <section data-markdown>
+					<textarea data-template>
+					  ### Matthew Rich
+		  
+					  Cloud Services Specialist
+
+					  Research Computing Services
+					  
+					  (not a scientist)<!-- .element: class="fragment" -->
+					</textarea>
+				  </section>
+		  
+				  <section data-markdown>
+					<textarea data-template>
+					  ### What is a "large" dataset?
+		  
+					  Larger than your laptop's RAM.
+					</textarea>
+				  </section>
+
+				  <section data-markdown>
+					<textarea data-template>
+					  ### What is a "large" dataset?
+		  
+					  ~~Larger than your laptop's RAM.~~
+
+					  Big enough for you to have to change your workflow.
+					</textarea>
+				  </section>
+
+				  <section data-markdown>
+					<textarea data-template>
+					  ### Topics To Be Covered
+
+					  - Varieties of Data
+					  - Data Transfer
+					  - General approaches to analysis
+					  - Python-specific Tips
+					  
+					  Questions welcome!<!-- .element: class="fragment" -->
+					  
+					</textarea>
+				  </section>
+		  
+				  <section data-markdown>
+					<textarea data-template>
+					  ## 1 // Varieties of Data
+					  
+					  Know your files
+					</textarea>
+				  </section>
+
+				  <section data-markdown>
+					<textarea data-template>
+					  ### Types of files: Text
+
+					  e.g. CSV, TSV, FASTA, FASTQ, VCF, SAM
+
+					  Simple, human-readable, easily manipulated
+
+					  Each char encoded as 1 byte<!-- .element: class="fragment" -->
+
+					  Delimiters (e.g. comma) take up 1 byte each!<!-- .element: class="fragment" -->
+					</textarea>
+				  </section>
+
+				  <section data-markdown>
+					<textarea data-template>
+					  ### Types of files: Binary
+
+					  Stream of data, formatted according to a specification
+					  
+					  e.g. BAM, TIFF, JPEG
+
+					  More efficient data encoding<!-- .element: class="fragment" -->
+					
+					  Require appropriate tools or custom code<!-- .element: class="fragment" -->
+					</textarea>
+				  </section>
+
+				  <section data-markdown>
+					<textarea data-template>
+					  ### Types of files:
+					  ### Hierarchical &amp; Columnar
+
+					  e.g. HDF5, Parquet
+
+					  Very fast and efficient
+					  
+					  Require specialized client libraries and coding
+					</textarea>
+				  </section>
+
+				  <section data-markdown>
+					<textarea data-template>
+					  ### Types of Files: Compressed
+
+					  zip (.zip): faster, moderate compression, Windows-friendly<!-- .element: style="text-align: left;" -->
+
+					  gzip (.gz): faster, good compression<!-- .element: style="text-align: left;" -->
+
+					  bzip2 (.bz2): slower, best compression<!-- .element: style="text-align: left;" -->
+
+					  lossy (jpeg, mp3)<!-- .element: style="text-align: left;" -->
+					</textarea>
+				  </section>
+
+				  <section data-markdown>
+					<textarea data-template>
+					  ### Types of Files: Archives
+
+					  zip
+
+					  tar (+ gzip or bzip2)
+					</textarea>
+				  </section>
+
+				  <section data-markdown>
+					<textarea data-template>
+					  Tip: You can't squeeze a stone!
+
+					  Text-based files with repeated strings compress MUCH better than random or binary data.
+					</textarea>
+				  </section>
+
+				  <section data-markdown>
+					<textarea data-template>
+					  Tip: You will need to uncompress to analyze.
+
+					  Make sure you have enough space!
+					</textarea>
+				  </section>
+
+				  <section data-markdown>
+					<textarea data-template>
+					  ## 2 // Moving Large Datasets
+
+					</textarea>
+				  </section>
+
+				  <section data-markdown>
+					<textarea data-template>
+					  don't
+					</textarea>
+				  </section>
+
+				  <section data-markdown>
+					<textarea data-template>
+					  ### Move, don't copy
+
+					  Moving is free (within same filesystem)
+
+					  Copying is expensive
+
+					  Beware bottlenecks, esp. network<!-- .element: class="fragment" -->
+
+					  (we can help)<!-- .element: class="fragment" -->
+					</textarea>
+				  </section>
+
+				  <section data-markdown>
+					<textarea data-template>
+					  Use Globus if you can.
+					</textarea>
+				  </section>
+
+				  <section data-markdown>
+					<textarea data-template>
+					  ## 3 // General Approaches
+
+					</textarea>
+				  </section>
+
+				  <section data-markdown>
+					<textarea data-template>
+						### Time-to-access
+						
+						How many CPU cycles burned waiting for data?
+
+- CPU registers (0)
+- CPU cache (&lt; 100)
+- RAM (~1000)
+- Storage (1MM - 100MM)
+- Network (??)
+
+					</textarea>
+				  </section>
+
+				  <section data-markdown>
+					<textarea data-template>
+					### Access patterns
+
+					Sequential vs. Random
+						
+					Your OS can optimize for sequential access!<!-- .element: class="fragment" -->
+					</textarea>
+				  </section>
+
+				  <section data-markdown>
+					<textarea data-template>
+					  ### Keep your data "in flight"
+
+					  - bash pipes
+					  - named pipes / FIFOs
+
+					  Avoid intermediate or temp files<!-- .element: class="fragment" -->
+
+					</textarea>
+				  </section>
+
+				  <section data-markdown>
+					<textarea data-template>
+					  ### Select only what you need
+
+					  - `cut`
+					  - `grep`
+					  - `sed`
+					  - `awk`
+				  
+					</textarea>
+				  </section>
+
+				  <section data-markdown>
+					<textarea data-template>
+					  ### Parallelize when you can
+
+					  - Slurm job arrays (Quest)
+					  - GNU `parallel`
+					  - Spark, Dask
+				  
+					</textarea>
+				  </section>
+
+			<section data-markdown>
+				<textarea data-template>
+					### SQL Databases
+
+					Great for some use cases
+
+					Consider Google BigQuery or Amazon Athena
+				</textarea>
+			</section>
+
+			<section data-markdown>
+				<textarea data-template>
+					### R
+
+					https://www.rstudio.com/resources/webinars/working-with-big-data-in-r/
+
+					(also next section translates to R &amp; `dplyr`)
+
+				</textarea>
+			</section>
+					
+			<section data-markdown>
+				<textarea data-template>
+					## 4 // Python Tips
+
+				</textarea>
+			</section>
+
+			<section data-markdown>
+				<textarea data-template>
+					### Memory management
+
+					Delete unused variables and call garbage collector:
+
+					```python
+					import gc
+
+					del temp_dataframe
+					gc.collect()
+					```
+
+					Note `gc.collect()` can be slow.
+				</textarea>
+			</section>
+
+			<section data-markdown>
+				<textarea data-template>
+					### Pandas
+
+					Choose appropriate data types when loading data:
+
+					```python
+					dtypes = {
+						'id': np.int32,
+						'obs': np.float64,
+						'type': 'category'
+					}
+
+					df = pd.read_csv('/path/to/file.csv', dtype=dtypes)
+					```
+				</textarea>
+			</section>
+
+			<section data-markdown>
+				<textarea data-template>
+					### Pandas
+
+					Use categoricals when possible:
+
+					```python
+					s = pd.Series(["a", "b", "c", "a"], dtype="category")
+					
+					df["mycol"] = df["mycol"].astype('category')
+					```
+				</textarea>
+			</section>
+
+			<section data-markdown>
+				<textarea data-template>
+					### Pandas
+
+					Load only a sample from a large file:
+
+					```python
+					lines = 10**8       # e.g. 100MM lines in file
+					samplesize = 10**4  # sample size 10k
+					skip = np.random.choice(np.arange(1, lines),
+						size=lines-samplesize, replace=False)
+					skip = np.sort(skip)
+					df = pd.read_csv("file.csv", skiprows=skip)
+					```
+				</textarea>
+			</section>
+
+			<section data-markdown>
+				<textarea data-template>
+					### Pandas
+
+					Preprocess in chunks when loading:
+
+					```python
+					def process(chunk):
+					    # do stuff
+					    return processed_chunk
+					
+					chunksize = 10**5
+					processed_chunks = []
+					for chunk in df.read_csv("data.csv", chunksize=chunksize):
+					    processed_chunks.append(process(chunk))
+					
+					processed_df = pd.concat(processed_chunks)
+					```
+				</textarea>
+			</section>
+
+			<section data-markdown>
+				<textarea data-template>
+					### Pandas
+
+					Import only selected columns:
+
+					```python
+					usecols = ['site', 'observation', 'timestamp']
+					dtype = {
+						'site': 'category',
+						'observation': np.float32,
+						'timestamp': 'str'
+					}
+					parse_dates = ['timestamp']
+
+					df = pd.read_csv("data.csv", usecols=usecols, dtype=dtype,
+					  parse_dates=parse_dates)
+					```
+				</textarea>
+			</section>
+
+			<section data-markdown>
+				<textarea data-template>
+					### Dask
+
+					Scales existing Python APIs to allow for parallel computing on larger-than-memory data sets.
+
+					Implements *most* of NumPy and Pandas interfaces.
+
+				</textarea>
+			</section>
+
+			<section data-markdown>
+				<textarea data-template>
+					### Dask
+
+					Breaks up numpy arrays and pandas dataframes into "blocks" that fit
+					into memory, computes across all cores, and stores blocks to disk when
+					not in use.
+
+					Can use own scheduler or interface with HPC scheduler.<!-- .element: class="fragment" -->
+
+				</textarea>
+			</section>
+
+			<section data-markdown>
+				<textarea data-template>
+					### Dask
+
+					Demo
+				</textarea>
+			</section>
+
+			<section data-markdown>
+			<script type="text/template">
+				### Thank You
+				[m-rich@northwestern.edu](mailto:m-rich@northwestern.edu)
+			</script>
+			</section>
+		  
+
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+			// More info about config & dependencies:
+			// - https://github.com/hakimel/reveal.js#configuration
+			// - https://github.com/hakimel/reveal.js#dependencies
+			Reveal.initialize({
+				width: 1024,
+				slideNumber: true,
+                history: true,
+				dependencies: [
+					{ src: 'plugin/markdown/marked.js' },
+					{ src: 'plugin/markdown/markdown.js' },
+					{ src: 'plugin/notes/notes.js', async: true },
+                    { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+				]
+			});
+		</script>
+	</body>
+</html>
